@@ -1,7 +1,5 @@
 package no.dervis.pokerhandkata.datastructure;
 
-import no.dervis.pokerhandkata.shared.CardType;
-import no.dervis.pokerhandkata.shared.Options.CardPriorityStatus;
 import no.dervis.pokerhandkata.shared.Options.IncludeJokerCard;
 
 
@@ -18,9 +16,7 @@ public class PokerCardSet extends CardSet {
 	 * Creates a new PokerCardSet
 	 */
 	public PokerCardSet() {
-		super(CardPriorityStatus.CARDPRIORITY_ON, 
-			  IncludeJokerCard.JOKER_OFF,
-			  CardType.ACE);
+		super(IncludeJokerCard.JOKER_OFF);
 	}
 	
 	/**

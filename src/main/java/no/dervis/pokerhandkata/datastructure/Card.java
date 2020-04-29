@@ -12,11 +12,10 @@ import no.dervis.pokerhandkata.shared.CardType;
 public class Card implements Comparable<Card>{
 	private final CardType type;
 	private final CardGroup group;
-	private int priority;
+	private final int priority;
 
 	public Card(CardType type, CardGroup group) {
-		this.type = type;
-		this.group = group;
+		this(type, group, type.getIndex());
 	}
 
 	public Card(CardType type, CardGroup group, int priority) {

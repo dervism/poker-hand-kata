@@ -4,6 +4,10 @@ import no.dervis.pokerhandkata.shared.CardGroup;
 import no.dervis.pokerhandkata.shared.CardType;
 import no.dervis.pokerhandkata.shared.PokerPatternType;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -94,6 +98,7 @@ public class PatternEvaluator {
 				return false;
 			}
 		}
+
 		return true;
 	}
 	
@@ -105,35 +110,28 @@ public class PatternEvaluator {
 	 * @return
 	 */
 	public static boolean isStraight(Card[] hand) {
-		int j = hand.length-2;
-		int lastPri = hand[hand.length-1].getPriority();
-		
-		while(((hand[j].getPriority() + 1) == lastPri) && j>0) {
-			lastPri = hand[j].getPriority();
-			j--;
+		for (int i = 1; i < hand.length; i++) {
+			if (hand[i].getType().getIndex() - 1 == hand[i-1].getType().getIndex()) {
+				return false;
+			}
 		}
 
-		return j == 0;
+		return true;
 	}
 	
 	// x-x-x&-x-x, x-x&-x-x-x
-	// should be rewritten to use regular expressions!
 	public static boolean isHouse(Card[] hand) {
-		if (hand.length>=5) {
-			if (((hand[0].getType() == hand[1].getType() &&
-					hand[1].getType() == hand[2].getType()) &&
-				
-				(hand[3].getType() == hand[4].getType()) && hand[2].getType() != hand[3].getType()) ||
-				
-			((hand[2].getType() == hand[3].getType() &&
-					hand[3].getType() == hand[4].getType()) &&
-				
-				(hand[0].getType() == hand[1].getType()) && hand[4].getType() != hand[0].getType())) {
-				return true;
-			}
-		}
-		
-		return false;
+		HashMap<CardType, HashSet<CardGroup>> set = collectKinds(hand);
+
+		boolean kinds3 = set.values()
+				.stream()
+				.anyMatch(cardGroups -> cardGroups.size() == 3);
+
+		boolean kinds2 = set.values()
+				.stream()
+				.anyMatch(cardGroups -> cardGroups.size() == 2);
+
+		return kinds3 && kinds2;
 	}
 	
 	// x-x-x-x-0, 0-x-x-x-x
@@ -141,31 +139,33 @@ public class PatternEvaluator {
 	 * True if and only if 4 cards in a row is of same type.
 	 */
 	public static boolean isFourOfAKind(Card[] hand) {
-		for (int i = 0; i < hand.length; i++) {
-			if (i + 3 > hand.length-1) {
-				break;
-			}
-			if(hand[i].getType() == hand[i+1].getType() &&
-					hand[i+1].getType() == hand[i+2].getType() &&
-					hand[i+2].getType() == hand[i+3].getType()) {
-				return true;
-			}
-		}
-		return false;
+		HashMap<CardType, HashSet<CardGroup>> set = collectKinds(hand);
+		return set.values()
+				.stream()
+				.anyMatch(cardGroups -> cardGroups.size() == 4);
 	}
 	
 	// x-x-x-0-0, 0-x-x-x-0, 0-0-x-x-x
 	/**
-	 * True if and only if 3 cards in a row is of same type.
+	 * True if and only if 3 cards in a row is of same type
+	 * and has 3 different groups.
 	 */
 	public static boolean isThreeOfAKind(Card[] hand) {
-		for (int i = 2; i < hand.length; i++) {
-			if (hand[i-2].getType() == hand[i-1].getType() 
-			 && hand[i-1].getType() == hand[i].getType()) {
-				return true;
-			}
+		HashMap<CardType, HashSet<CardGroup>> set = collectKinds(hand);
+
+		return set.values()
+				.stream()
+				.anyMatch(cardGroups -> cardGroups.size() == 3);
+	}
+
+	private static HashMap<CardType, HashSet<CardGroup>> collectKinds(Card[] hand) {
+		HashMap<CardType, HashSet<CardGroup>> set = new HashMap<>();
+		for (Card card : hand) {
+			Optional.ofNullable(
+					set.putIfAbsent(card.getType(), new HashSet<>(Set.of(card.getGroup()))))
+					.ifPresent(cardGroups -> cardGroups.add(card.getGroup()));
 		}
-		return false;
+		return set;
 	}
 	
 	// x-x|x-x-0, 0-x-x|x-x, x-x-0-x-x, 0-x-x-0-x-x-0
@@ -175,7 +175,7 @@ public class PatternEvaluator {
 	 */
 	public static boolean isToPairs(Card[] hand) {
 		Hand h = new Hand(hand);
-		Pattern topair = Pattern.compile("([2-9TJQKA])\\1");
+		Pattern topair = Pattern.compile("([2-9TJQKAR])\\1");
 		Matcher m = topair.matcher(h.getAsString());
 		
 		int numPairs = 0;
@@ -188,9 +188,7 @@ public class PatternEvaluator {
 				lastPair = nextPair; 
 			}
 		}
-		if (numPairs >= 2) return true;
-		
-		return false;
+		return numPairs >= 2;
 	}
 	
 	//x-x-0-0-0, 0-x-x-0-0, 0-0-x-x-0, 0-0-0-x-x

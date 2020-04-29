@@ -6,7 +6,6 @@ package no.dervis.pokerhandkata.datastructure;
 import no.dervis.pokerhandkata.shared.CardGroup;
 import no.dervis.pokerhandkata.shared.CardType;
 import no.dervis.pokerhandkata.shared.Options;
-import no.dervis.pokerhandkata.shared.Options.CardPriorityStatus;
 import no.dervis.pokerhandkata.shared.Options.IncludeJokerCard;
 
 import java.util.Collections;
@@ -23,39 +22,13 @@ import java.util.LinkedList;
  */
 public class CardSet {
     protected LinkedList<Card> list = new LinkedList<Card>();
-    protected CardPriorityStatus cardPriorityStatus;
     protected IncludeJokerCard includeJokerStatus;
-    protected CardType highestPriorityCard;
 
     /**
      * Creates a standard CardSet
      */
-    public CardSet() {
-        this(CardPriorityStatus.CARDPRIORITY_OFF, IncludeJokerCard.JOKER_OFF);
-    }
-
-    /**
-     * Creates a standard CardSet
-     * @param cardpristat Use card priority or not
-     * @param jokerstat Include Joker or not
-     */
-    public CardSet(CardPriorityStatus cardpristat,
-                   IncludeJokerCard jokerstat) {
-        this(cardpristat, jokerstat, CardType.KING);
-    }
-
-    /**
-     * Creates a new CardSet with specified options
-     * @param cardpristat Use card priority or not
-     * @param jokerstat Include Joker or not
-     * @param highestPriCard The best card
-     */
-    public CardSet(CardPriorityStatus cardpristat,
-                   IncludeJokerCard jokerstat,
-                   CardType highestPriCard) {
-        cardPriorityStatus = cardpristat;
+    public CardSet(IncludeJokerCard jokerstat) {
         includeJokerStatus = jokerstat;
-        highestPriorityCard = highestPriCard;
     }
 
     /**
@@ -64,17 +37,11 @@ public class CardSet {
     public void create() {
         for (CardGroup group : CardGroup.values()) {
             for (CardType type : CardType.values()) {
-                if (type == CardType.JOKER &&
-                        includeJokerStatus == Options.IncludeJokerCard.JOKER_OFF) {
+                if (type == CardType.JOKER && includeJokerStatus == Options.IncludeJokerCard.JOKER_OFF) {
                     continue;
                 }
-                if (cardPriorityStatus == CardPriorityStatus.CARDPRIORITY_ON) {
-                    if (type == highestPriorityCard) {
-                        list.add(new Card(type, group, CardType.values().length));
-                    } else
-                        list.add(new Card(type, group));
-                } else
-                    list.add(new Card(type, group));
+
+                list.add(new Card(type, group));
             }
         }
     }

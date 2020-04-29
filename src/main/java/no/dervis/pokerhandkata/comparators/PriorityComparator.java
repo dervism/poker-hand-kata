@@ -15,9 +15,7 @@ import java.util.Comparator;
  */
 public class PriorityComparator implements Comparator<Card> {
 	public int compare(Card o1, Card o2) {
-		if (o1.getPriority() > o2.getPriority()) return 1;
-		if (o1.getPriority() < o2.getPriority()) return -1;
-		return 0;
+		return Integer.compare(o1.getPriority(), o2.getPriority());
 	}
 
 }
