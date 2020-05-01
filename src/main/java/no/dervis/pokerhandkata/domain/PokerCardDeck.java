@@ -1,7 +1,4 @@
-package no.dervis.pokerhandkata.datastructure;
-
-import no.dervis.pokerhandkata.shared.Options.IncludeJokerCard;
-
+package no.dervis.pokerhandkata.domain;
 
 /**
  * The PokerCardSet class represents a poker cardset that
@@ -10,12 +7,12 @@ import no.dervis.pokerhandkata.shared.Options.IncludeJokerCard;
  * @author Dervis Mansuroglu
  * @version 0.0.1
  */
-public class PokerCardSet extends CardSet {
+public class PokerCardDeck extends CardDeck {
 	
 	/**
 	 * Creates a new PokerCardSet
 	 */
-	public PokerCardSet() {
+	public PokerCardDeck() {
 		super(IncludeJokerCard.JOKER_OFF);
 	}
 	

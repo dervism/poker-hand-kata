@@ -1,15 +1,11 @@
-package no.dervis.pokerhandkata.datastructure;
+package no.dervis.pokerhandkata.eval;
 
-import no.dervis.pokerhandkata.shared.CardGroup;
-import no.dervis.pokerhandkata.shared.CardType;
-import no.dervis.pokerhandkata.shared.PokerPatternType;
+import no.dervis.pokerhandkata.domain.*;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * This is a very simple poker hand evaluator. It relies
@@ -30,32 +26,34 @@ import java.util.regex.Pattern;
  */
 public class PatternEvaluator {
 
-	public static PokerPatternType getPokerPattern(Card[] hand) {
-		if (isRoyalFlush(hand)) {
+	public static PokerPatternType getPokerPattern(Hand hand) {
+		Card[] cards = hand.getCards();
+
+		if (isRoyalFlush(cards)) {
 			return PokerPatternType.ROYAL_FLUSH;
 		}
-		if (isStraightFlush(hand)) {
+		if (isStraightFlush(cards)) {
 			return PokerPatternType.STRAIGHT_FLUSH;
 		}
-		if (isFourOfAKind(hand)) {
+		if (isFourOfAKind(cards)) {
 			return PokerPatternType.FOUR_OF_A_KIND;
 		}
-		if (isHouse(hand)) {
+		if (isHouse(cards)) {
 			return PokerPatternType.HOUSE;
 		}
-		if (isFlush(hand)) {
+		if (isFlush(cards)) {
 			return PokerPatternType.FLUSH;
 		}
-		if (isStraight(hand)) {
+		if (isStraight(cards)) {
 			return PokerPatternType.STRAIGHT;
 		}
-		if (isThreeOfAKind(hand)) {
+		if (isThreeOfAKind(cards)) {
 			return PokerPatternType.THREE_OF_A_KIND;
 		}
-		if (isToPairs(hand)) {
+		if (isTwoPairs2(hand)) {
 			return PokerPatternType.TWO_PAIRS;
 		}
-		if (isOnePair(hand)) {
+		if (isOnePair(cards)) {
 			return PokerPatternType.ONE_PAIR;
 		}
 		return PokerPatternType.HIGH_CARD;
@@ -111,7 +109,7 @@ public class PatternEvaluator {
 	 */
 	public static boolean isStraight(Card[] hand) {
 		for (int i = 1; i < hand.length; i++) {
-			if (hand[i].getType().getIndex() - 1 == hand[i-1].getType().getIndex()) {
+			if (hand[i].ordinal() - 1 != hand[i-1].ordinal()) {
 				return false;
 			}
 		}
@@ -121,15 +119,10 @@ public class PatternEvaluator {
 	
 	// x-x-x&-x-x, x-x&-x-x-x
 	public static boolean isHouse(Card[] hand) {
-		HashMap<CardType, HashSet<CardGroup>> set = collectKinds(hand);
+		var set = groupByTypeAndCount(hand);
 
-		boolean kinds3 = set.values()
-				.stream()
-				.anyMatch(cardGroups -> cardGroups.size() == 3);
-
-		boolean kinds2 = set.values()
-				.stream()
-				.anyMatch(cardGroups -> cardGroups.size() == 2);
+		boolean kinds3 = set.containsValue(3);
+		boolean kinds2 = set.containsValue(2);
 
 		return kinds3 && kinds2;
 	}
@@ -139,10 +132,7 @@ public class PatternEvaluator {
 	 * True if and only if 4 cards in a row is of same type.
 	 */
 	public static boolean isFourOfAKind(Card[] hand) {
-		HashMap<CardType, HashSet<CardGroup>> set = collectKinds(hand);
-		return set.values()
-				.stream()
-				.anyMatch(cardGroups -> cardGroups.size() == 4);
+		return groupByTypeAndCount(hand).containsValue(4);
 	}
 	
 	// x-x-x-0-0, 0-x-x-x-0, 0-0-x-x-x
@@ -151,14 +141,10 @@ public class PatternEvaluator {
 	 * and has 3 different groups.
 	 */
 	public static boolean isThreeOfAKind(Card[] hand) {
-		HashMap<CardType, HashSet<CardGroup>> set = collectKinds(hand);
-
-		return set.values()
-				.stream()
-				.anyMatch(cardGroups -> cardGroups.size() == 3);
+		return groupByTypeAndCount(hand).containsValue(3);
 	}
 
-	private static HashMap<CardType, HashSet<CardGroup>> collectKinds(Card[] hand) {
+	private static HashMap<CardType, HashSet<CardGroup>> groupByKind(Card[] hand) {
 		HashMap<CardType, HashSet<CardGroup>> set = new HashMap<>();
 		for (Card card : hand) {
 			Optional.ofNullable(
@@ -167,16 +153,30 @@ public class PatternEvaluator {
 		}
 		return set;
 	}
+
+	private static HashMap<CardType, Integer> groupByTypeAndCount(Card[] hand) {
+		HashMap<CardType, Integer> set = new HashMap<>();
+		for (Card card : hand) {
+			Integer count = set.putIfAbsent(card.getType(), 1);
+			if (count != null) set.merge(card.getType(), 1, Integer::sum);
+		}
+		return set;
+	}
+
+	// slow
+	private static Map<CardType, Long> groupByTypeAndCount2(Card[] hand) {
+		return Arrays.stream(hand)
+				.collect(Collectors.groupingBy(Card::getType, Collectors.counting()));
+	}
 	
 	// x-x|x-x-0, 0-x-x|x-x, x-x-0-x-x, 0-x-x-0-x-x-0
 	/**
 	 * Returns true if it finds at least two different pairs.
 	 * The pairs can be located in any position.
 	 */
-	public static boolean isToPairs(Card[] hand) {
-		Hand h = new Hand(hand);
+	public static boolean isTwoPairs(Hand hand) {
 		Pattern topair = Pattern.compile("([2-9TJQKAR])\\1");
-		Matcher m = topair.matcher(h.getAsString());
+		Matcher m = topair.matcher(hand.toShortString());
 		
 		int numPairs = 0;
 		String lastPair = "";
@@ -188,6 +188,29 @@ public class PatternEvaluator {
 				lastPair = nextPair; 
 			}
 		}
+		return numPairs >= 2;
+	}
+
+	public static boolean isTwoPairs2(Hand hand) {
+		String string = hand.toShortString();
+		int numPairs = 0;
+
+		char first = 0;
+		char second = 0;
+
+		for (int i = 1; i < string.length(); i+=2) {
+			char c = string.charAt(i-1);
+			char c2 = string.charAt(i);
+			if (c == c2) {
+				first = c;
+				if (second != first) {
+					second = first;
+					numPairs++;
+				}
+			}
+
+		}
+
 		return numPairs >= 2;
 	}
 	

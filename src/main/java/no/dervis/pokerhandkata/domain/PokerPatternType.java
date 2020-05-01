@@ -1,4 +1,4 @@
-package no.dervis.pokerhandkata.shared;
+package no.dervis.pokerhandkata.domain;
 
 public enum PokerPatternType {
     HIGH_CARD("High Card"),
@@ -12,7 +12,7 @@ public enum PokerPatternType {
     STRAIGHT_FLUSH("Straight Flush"),
     ROYAL_FLUSH("Royal Flush");
 
-    private String name;
+    private final String name;
     PokerPatternType(String name) {
         this.name = name;
     }

@@ -1,17 +1,16 @@
 package no.dervis.pokerhandkata;
 
-import no.dervis.pokerhandkata.comparators.PriorityComparator;
-import no.dervis.pokerhandkata.datastructure.Card;
-import no.dervis.pokerhandkata.datastructure.Hand;
-import no.dervis.pokerhandkata.datastructure.PatternEvaluator;
-import no.dervis.pokerhandkata.datastructure.PokerCardSet;
-import no.dervis.pokerhandkata.shared.PokerPatternType;
+import no.dervis.pokerhandkata.domain.Hand;
+import no.dervis.pokerhandkata.domain.PokerCardDeck;
+import no.dervis.pokerhandkata.domain.PokerPatternType;
+import no.dervis.pokerhandkata.eval.PatternEvaluator;
 
 import java.text.DecimalFormat;
-import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.HashSet;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static java.lang.System.lineSeparator;
+import static java.lang.System.nanoTime;
 
 /**
  * The PokerHandSimulator application is created for educational
@@ -55,63 +54,53 @@ public class PokerHandKata {
                     e.printStackTrace();
                 }
 
-                if (++tmp % 40 == 0) {
-                    System.out.print(">\n");
-                } else System.out.print(">");
+                if (progressbar.get()) {
+                    if (++tmp % 40 == 0) {
+                        System.out.print(">\n");
+                    } else System.out.print(">");
+                }
             }
 
         });
         t.start();
 
-        long tt = System.currentTimeMillis();
+        PokerCardDeck cardDeck = new PokerCardDeck();
+        cardDeck.create();
+        cardDeck.shuffle();
 
-        PokerCardSet set = new PokerCardSet();
-        set.create();
-        set.shuffle();
-
-        EnumMap<PokerPatternType, Integer> patterns =
-                new EnumMap<PokerPatternType, Integer>(PokerPatternType.class);
-
-        EnumMap<PokerPatternType, HashSet<String>> uniques =
-                new EnumMap<PokerPatternType, HashSet<String>>(PokerPatternType.class);
+        EnumMap<PokerPatternType, Integer> patterns = new EnumMap<PokerPatternType, Integer>(PokerPatternType.class);
+        EnumMap<PokerPatternType, Set<String>> uniques = new EnumMap<>(PokerPatternType.class);
 
         int numTrials = 500000;
         int numDealt = 0;
 
+        long startTime = nanoTime();
+
         while (numDealt < numTrials) {
-            Card[] hand = set.getCards(5);
-            Arrays.sort(hand, new PriorityComparator());
-            PokerPatternType pattern = PatternEvaluator.getPokerPattern(hand);
-            Hand h = new Hand(hand);
-            Integer num = patterns.get(pattern);
-            HashSet<String> hashset = uniques.get(pattern);
+            Hand hand = new Hand(cardDeck.getCards(5));
+            PokerPatternType pattern = PatternEvaluator.getPokerPattern(hand.sort());
 
-            if (num == null) {
-                patterns.put(pattern, 1);
-            } else {
-                num++;
-                patterns.put(pattern, num);
-            }
+            var pc = patterns.putIfAbsent(pattern, 1);
+            if (pc != null) patterns.put(pattern, patterns.get(pattern) + 1);
 
-            if (hashset == null) {
-                hashset = new HashSet<>();
-                hashset.add(h.getAsString());
-                uniques.put(pattern, hashset);
-            } else
-                hashset.add(h.getAsString());
+            var uc = uniques.putIfAbsent(pattern, new HashSet<>(Set.of(hand.toString())));
+            if (uc != null) uniques.get(pattern).add(hand.toString());
 
             numDealt++;
         }
 
-        System.out.println(" " + ((System.currentTimeMillis() - tt) / 1000f) + "sec");
-        DecimalFormat des = new DecimalFormat("##.###");
-        for (PokerPatternType pattern : patterns.keySet()) {
-            System.out.println(pattern.getName() + " " + patterns.get(pattern) +
-                    "(" + uniques.get(pattern).size() + ")" +
-                    " (" + (des.format(((patterns.get(pattern) / (float) numTrials)) * 100)) + "%) ");
-        }
-
         progressbar.set(false);
+        System.out.printf(" %.2f sec" + lineSeparator(), ((nanoTime() - startTime) / 1_000_000_000d));
+
+        TreeSet<Map.Entry<PokerPatternType, Integer>> set = new TreeSet<>(Map.Entry.<PokerPatternType, Integer>comparingByValue().reversed());
+        set.addAll(patterns.entrySet());
+
+        DecimalFormat des = new DecimalFormat("##.###");
+        for (Map.Entry<PokerPatternType, Integer> entry : set) {
+            System.out.println(entry.getKey().getName() + " " + entry.getValue() +
+                    "(" + uniques.get(entry.getKey()).size() + ")" +
+                    " (" + (des.format(((entry.getValue() / (float) numTrials)) * 100)) + "%) ");
+        }
     }
 
 }

@@ -3,7 +3,7 @@
  */
 package no.dervis.pokerhandkata.comparators;
 
-import no.dervis.pokerhandkata.datastructure.Card;
+import no.dervis.pokerhandkata.domain.Card;
 
 import java.util.Comparator;
 
@@ -13,9 +13,9 @@ import java.util.Comparator;
  * @author Dervis Mansuroglu
  *
  */
-public class PriorityComparator implements Comparator<Card> {
+public class OrdinalComparator implements Comparator<Card> {
 	public int compare(Card o1, Card o2) {
-		return Integer.compare(o1.getPriority(), o2.getPriority());
+		return Integer.compare(o1.ordinal(), o2.ordinal());
 	}
 
 }

@@ -1,16 +1,12 @@
-/**
- *
- */
-package no.dervis.pokerhandkata.datastructure;
-
-import no.dervis.pokerhandkata.shared.CardGroup;
-import no.dervis.pokerhandkata.shared.CardType;
-import no.dervis.pokerhandkata.shared.Options;
-import no.dervis.pokerhandkata.shared.Options.IncludeJokerCard;
+package no.dervis.pokerhandkata.domain;
 
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
+import java.util.stream.Stream;
+
+import static no.dervis.pokerhandkata.domain.CardDeck.IncludeJokerCard.JOKER_ON;
+import static no.dervis.pokerhandkata.domain.CardType.JOKER;
 
 /**
  * A CardSet represents a card deck and contains utility
@@ -20,30 +16,34 @@ import java.util.LinkedList;
  * @author Dervis Mansuroglu
  *
  */
-public class CardSet {
+public class CardDeck {
     protected LinkedList<Card> list = new LinkedList<Card>();
     protected IncludeJokerCard includeJokerStatus;
 
     /**
      * Creates a standard CardSet
      */
-    public CardSet(IncludeJokerCard jokerstat) {
+    public CardDeck(IncludeJokerCard jokerstat) {
         includeJokerStatus = jokerstat;
     }
 
+    public enum IncludeJokerCard {
+        JOKER_ON, JOKER_OFF;
+    }
+
     /**
-     * Creates a new deck with/without priorities
+     * Creates a new deck
      */
     public void create() {
         for (CardGroup group : CardGroup.values()) {
-            for (CardType type : CardType.values()) {
-                if (type == CardType.JOKER && includeJokerStatus == Options.IncludeJokerCard.JOKER_OFF) {
-                    continue;
-                }
-
-                list.add(new Card(type, group));
-            }
+            for (CardType type : CardType.values())
+                if (type != JOKER || includeJokerStatus == JOKER_ON)
+                    list.add(new Card(type, group));
         }
+    }
+
+    public Stream<Card> stream() {
+        return list.stream();
     }
 
     /**
@@ -91,7 +91,7 @@ public class CardSet {
      * @param comparator Specifies how to sort the deck
      */
     public void sort(Comparator<Card> comparator) {
-        Collections.sort(list, comparator);
+        list.sort(comparator);
     }
 
     /**
@@ -104,9 +104,9 @@ public class CardSet {
     /**
      * Prints the deck
      */
-    public void print(boolean prefix) {
+    public void print() {
         for (Card c : list) {
-            System.out.println(c.toString(prefix));
+            System.out.println(c.toString());
         }
         System.out.println("Size: " + size());
     }
