@@ -1,4 +1,4 @@
-package no.dervis.pokerhandkata.eval;
+package no.dervis.pokerhandkata.evaluator;
 
 import no.dervis.pokerhandkata.domain.Card;
 import no.dervis.pokerhandkata.domain.Hand;

@@ -1,9 +1,9 @@
-package no.dervis.pokerhandkata;
+package no.dervis.pokerhandkata.simulator;
 
 import no.dervis.pokerhandkata.domain.Hand;
 import no.dervis.pokerhandkata.domain.PokerCardDeck;
 import no.dervis.pokerhandkata.domain.PokerPatternType;
-import no.dervis.pokerhandkata.eval.PokerPatternEvaluator;
+import no.dervis.pokerhandkata.evaluator.PokerPatternEvaluator;
 
 import java.text.DecimalFormat;
 import java.util.*;
