@@ -2,30 +2,22 @@ package no.dervis.pokerhandkata.domain;
 
 import java.security.SecureRandom;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.stream.Stream;
 
 import static no.dervis.pokerhandkata.domain.CardDeck.IncludeJokerCard.JOKER_ON;
 import static no.dervis.pokerhandkata.domain.CardType.JOKER;
 
-/**
- * A CardSet represents a card deck and contains utility
- * methods for handling the deck. The card set has the possibiltiy
- * of setting and changning a highest priority card in the deck.
- *
- * @author Dervis Mansuroglu
- *
- */
+
 public class CardDeck {
     protected LinkedList<Card> list = new LinkedList<Card>();
     protected IncludeJokerCard includeJokerStatus;
 
     /**
-     * Creates a standard CardSet
+     * Creates a standard CardDeck
      */
-    public CardDeck(IncludeJokerCard jokerstat) {
-        includeJokerStatus = jokerstat;
+    public CardDeck(IncludeJokerCard includeJokerCard) {
+        includeJokerStatus = includeJokerCard;
     }
 
     public enum IncludeJokerCard {
@@ -89,31 +81,6 @@ public class CardDeck {
 
     public void secureShuffle() {
         Collections.shuffle(list, new SecureRandom());
-    }
-
-    /**
-     * Sort the deck with a given comparator
-     * @param comparator Specifies how to sort the deck
-     */
-    public void sort(Comparator<Card> comparator) {
-        list.sort(comparator);
-    }
-
-    /**
-     * Sorts the deck by card index
-     */
-    public void sort() {
-        Collections.sort(list);
-    }
-
-    /**
-     * Prints the deck
-     */
-    public void print() {
-        for (Card c : list) {
-            System.out.println(c.toString());
-        }
-        System.out.println("Size: " + size());
     }
 
     public void addLast(Card o) {

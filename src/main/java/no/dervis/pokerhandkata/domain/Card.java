@@ -1,7 +1,7 @@
 package no.dervis.pokerhandkata.domain;
 
 /**
- * This class defines a playing card. 
+ * This class defines a card.
  * 
  * @author Dervis Mansuroglu
  *
@@ -32,7 +32,7 @@ public class Card implements Comparable<Card>{
 	}
 
 	/**
-	 * Checks whether two cards are meaningfully equal.
+	 * Checks whether two cards are equal.
 	 */
 	public final boolean equals(Object other) {
 		if (other instanceof Card card)
@@ -42,11 +42,7 @@ public class Card implements Comparable<Card>{
 	}
 
 	public String shortString() {
-		return type.getPrefix();
-	}
-
-	public String id() {
-		return "" + type + group;
+		return type.getShortName();
 	}
 
 	/**

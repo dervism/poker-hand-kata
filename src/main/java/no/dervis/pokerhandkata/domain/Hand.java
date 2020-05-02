@@ -4,11 +4,9 @@ import no.dervis.pokerhandkata.comparators.OrdinalComparator;
 
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.stream.Stream;
 
 /**
- * Contains methods for adding, removing and printing
- * a hand.
+ * Contains methods for adding, sorting and printing a hand.
  * 
  * @author Dervis Mansuroglu
  *
@@ -23,10 +21,6 @@ public class Hand {
 	public static Hand of(Card[] cards) {
 		return new Hand(cards);
 	}
-	
-	public int size() {
-		return cards.length;
-	}
 
 	public Hand sort(Comparator<Card> comparator) {
 		Arrays.sort(cards, comparator);
@@ -37,15 +31,14 @@ public class Hand {
 		Arrays.sort(cards, new OrdinalComparator());
 		return this;
 	}
-
-	public Stream<Card> stream() {
-		return Arrays.stream(cards);
-	}
 	
 	public Card[] getCards() {
 		return cards;
 	}
 
+	/**
+	 * Only the card's ranks (without the suits)
+	 */
 	public String toShortString() {
 		StringBuilder b = new StringBuilder(cards.length);
 		for (Card card : cards) {
@@ -57,7 +50,7 @@ public class Hand {
 
 	/**
 	 * Prints out a human readable text describing
-	 * the card values (example: 789TK).
+	 * the card values (example: [8♦][9♠][J♠][J♣][K♠]).
 	 * 
 	 * @return
 	 */
