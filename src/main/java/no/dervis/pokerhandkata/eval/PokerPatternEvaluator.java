@@ -1,32 +1,25 @@
 package no.dervis.pokerhandkata.eval;
 
-import no.dervis.pokerhandkata.domain.*;
-
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import no.dervis.pokerhandkata.domain.Card;
+import no.dervis.pokerhandkata.domain.CardType;
+import no.dervis.pokerhandkata.domain.Hand;
+import no.dervis.pokerhandkata.domain.PokerPatternType;
 
 /**
  * This is a very simple poker hand evaluator. It relies
- * on poker hands sorted on card priority (low->high). The
- * evaluator will tell you which pattern it finds on a given
- * poker hand.The evaluator finds patterns, however, it will 
- * not evaluate best 5 out of x>5 cards.
+ * on poker hands sorted on card value (low->high).
  * 
- * All methods the can search a variable-length poker
- * hand, except "isHouse()" which only searches 5 cards.
+ * All methods search a variable-length poker.
  * 
  * In order to get an correct evaluation, patterns have to
  * search in order of poker ranking.
  * 
- * 
  * @author Dervis Mansuroglu
  *
  */
-public class PatternEvaluator {
+public class PokerPatternEvaluator extends PatternVerifier {
 
-	public static PokerPatternType getPokerPattern(Hand hand) {
+	public static PokerPatternType getPokerPattern(Hand hand, boolean strict) {
 		Card[] cards = hand.getCards();
 
 		if (isRoyalFlush(cards)) {
@@ -38,7 +31,7 @@ public class PatternEvaluator {
 		if (isFourOfAKind(cards)) {
 			return PokerPatternType.FOUR_OF_A_KIND;
 		}
-		if (isHouse(cards)) {
+		if ((strict && isHouseStrict(cards)) || isHouse(cards)) {
 			return PokerPatternType.HOUSE;
 		}
 		if (isFlush(cards)) {
@@ -47,13 +40,13 @@ public class PatternEvaluator {
 		if (isStraight(cards)) {
 			return PokerPatternType.STRAIGHT;
 		}
-		if (isThreeOfAKind(cards)) {
+		if ((strict && isThreeOfAKindStrict(cards)) || isThreeOfAKind(cards)) {
 			return PokerPatternType.THREE_OF_A_KIND;
 		}
-		if (isTwoPairs2(hand)) {
+		if ((strict && isTwoPairsStrict(cards)) || isTwoPairs(hand)) {
 			return PokerPatternType.TWO_PAIRS;
 		}
-		if (isOnePair(cards)) {
+		if ((strict && isOnePairStrict(cards)) || isOnePair(cards)) {
 			return PokerPatternType.ONE_PAIR;
 		}
 		return PokerPatternType.HIGH_CARD;
@@ -90,9 +83,8 @@ public class PatternEvaluator {
 	 * @return
 	 */
 	public static boolean isFlush(Card[] hand) {
-		CardGroup cg = hand[0].getGroup();
 		for (int i = 1; i < hand.length; i++) {
-			if (hand[i].getGroup() != cg) {
+			if (hand[i].getGroup() != hand[i-1].getGroup()) {
 				return false;
 			}
 		}
@@ -116,8 +108,7 @@ public class PatternEvaluator {
 
 		return true;
 	}
-	
-	// x-x-x&-x-x, x-x&-x-x-x
+
 	public static boolean isHouse(Card[] hand) {
 		var set = groupByTypeAndCount(hand);
 
@@ -126,16 +117,29 @@ public class PatternEvaluator {
 
 		return kinds3 && kinds2;
 	}
-	
-	// x-x-x-x-0, 0-x-x-x-x
+
+	public static boolean isHouseStrict(Card[] hand) {
+		var set = groupByTypeAndGroupCount(hand);
+
+		boolean size = set.size() >= 2;
+		boolean kinds3 = set.values().stream().anyMatch(g -> g.size() == 3);
+		boolean kinds2 = set.values().stream().anyMatch(g -> g.size() == 2);
+
+		return size && kinds3 && kinds2;
+	}
+
 	/**
 	 * True if and only if 4 cards in a row is of same type.
 	 */
 	public static boolean isFourOfAKind(Card[] hand) {
 		return groupByTypeAndCount(hand).containsValue(4);
 	}
-	
-	// x-x-x-0-0, 0-x-x-x-0, 0-0-x-x-x
+
+	public static boolean isFourOfAKindStrict(Card[] hand) {
+		return groupByTypeAndGroupCount(hand)
+				.values().stream().anyMatch(g -> g.size() == 4);
+	}
+
 	/**
 	 * True if and only if 3 cards in a row is of same type
 	 * and has 3 different groups.
@@ -144,61 +148,21 @@ public class PatternEvaluator {
 		return groupByTypeAndCount(hand).containsValue(3);
 	}
 
-	private static HashMap<CardType, HashSet<CardGroup>> groupByKind(Card[] hand) {
-		HashMap<CardType, HashSet<CardGroup>> set = new HashMap<>();
-		for (Card card : hand) {
-			Optional.ofNullable(
-					set.putIfAbsent(card.getType(), new HashSet<>(Set.of(card.getGroup()))))
-					.ifPresent(cardGroups -> cardGroups.add(card.getGroup()));
-		}
-		return set;
+	public static boolean isThreeOfAKindStrict(Card[] hand) {
+		return groupByTypeAndGroupCount(hand)
+				.values().stream().anyMatch(g -> g.size() == 3);
 	}
 
-	private static HashMap<CardType, Integer> groupByTypeAndCount(Card[] hand) {
-		HashMap<CardType, Integer> set = new HashMap<>();
-		for (Card card : hand) {
-			Integer count = set.putIfAbsent(card.getType(), 1);
-			if (count != null) set.merge(card.getType(), 1, Integer::sum);
-		}
-		return set;
-	}
-
-	// slow
-	private static Map<CardType, Long> groupByTypeAndCount2(Card[] hand) {
-		return Arrays.stream(hand)
-				.collect(Collectors.groupingBy(Card::getType, Collectors.counting()));
-	}
-	
-	// x-x|x-x-0, 0-x-x|x-x, x-x-0-x-x, 0-x-x-0-x-x-0
 	/**
 	 * Returns true if it finds at least two different pairs.
 	 * The pairs can be located in any position.
 	 */
 	public static boolean isTwoPairs(Hand hand) {
-		Pattern topair = Pattern.compile("([2-9TJQKAR])\\1");
-		Matcher m = topair.matcher(hand.toShortString());
-		
-		int numPairs = 0;
-		String lastPair = "";
-		String nextPair = "";
-		while(m.find()) {
-			nextPair = m.group();
-			if (!lastPair.equals(nextPair)) {
-				numPairs++;
-				lastPair = nextPair; 
-			}
-		}
-		return numPairs >= 2;
-	}
-
-	public static boolean isTwoPairs2(Hand hand) {
 		String string = hand.toShortString();
 		int numPairs = 0;
+		char first, second = 0;
 
-		char first = 0;
-		char second = 0;
-
-		for (int i = 1; i < string.length(); i+=2) {
+		for (int i = 1; i < string.length(); i++) {
 			char c = string.charAt(i-1);
 			char c2 = string.charAt(i);
 			if (c == c2) {
@@ -213,8 +177,16 @@ public class PatternEvaluator {
 
 		return numPairs >= 2;
 	}
-	
-	//x-x-0-0-0, 0-x-x-0-0, 0-0-x-x-0, 0-0-0-x-x
+
+	public static boolean isTwoPairsStrict(Card[] hand) {
+		var set = groupByTypeAndGroupCount(hand);
+
+		boolean size = set.size() >= 2;
+		long c = set.values().stream().filter(g -> g.size() == 2).count();
+
+		return size && c >= 2;
+	}
+
 	/**
 	 * Searches for one pair. Because we will always search
 	 * for two pairs and 3 and 4 of a kind first, there is no
@@ -223,6 +195,16 @@ public class PatternEvaluator {
 	public static boolean isOnePair(Card[] hand) {
 		for (int i = 1; i < hand.length; i++) {
 			if (hand[i-1].getType() == hand[i].getType()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static boolean isOnePairStrict(Card[] hand) {
+		for (int i = 1; i < hand.length; i++) {
+			if (hand[i-1].getType() == hand[i].getType()
+					&& hand[i-1].getGroup() != hand[i].getGroup()) {
 				return true;
 			}
 		}

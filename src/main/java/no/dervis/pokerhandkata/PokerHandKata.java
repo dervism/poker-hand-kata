@@ -3,7 +3,7 @@ package no.dervis.pokerhandkata;
 import no.dervis.pokerhandkata.domain.Hand;
 import no.dervis.pokerhandkata.domain.PokerCardDeck;
 import no.dervis.pokerhandkata.domain.PokerPatternType;
-import no.dervis.pokerhandkata.eval.PatternEvaluator;
+import no.dervis.pokerhandkata.eval.PokerPatternEvaluator;
 
 import java.text.DecimalFormat;
 import java.util.*;
@@ -21,16 +21,17 @@ import static java.lang.System.nanoTime;
  * <p>
  * When executed, you'll get an output such as
  * <p>
- * >>>>>>>>>>>>>>>>>>>>> 6.422sec
- * High Card 240055(1251) (48,011%)
- * One Pair 213225(2851) (42,645%)
- * Two Pairs 24990(858) (4,998%)
- * Three Of a Kind 12135(858) (2,427%)
- * Straight 7583(45) (1,517%)
- * Flush 950(721) (0,19%)
- * House 848(154) (0,17%)
- * Four Of a Kind 189(104) (0,038%)
- * Straight Flush 25(18) (0,005%)
+ >>> 1.13 sec
+ High Card 245586(223688) (49.117%)
+ One Pair 230344(220457) (46.069%)
+ Three Of a Kind 11825(11676) (2.365%)
+ Two Pairs 8430(8236) (1.686%)
+ Straight 1731(1574) (0.346%)
+ Flush 1063(989) (0.213%)
+ House 838(833) (0.168%)
+ Four Of a Kind 174(174) (0.035%)
+ Straight Flush 8(5) (0.002%)
+ Royal Flush 1(1) (0%)
  * <p>
  * rank-name x1 (x2) (x3), where
  * <p>
@@ -67,18 +68,26 @@ public class PokerHandKata {
         PokerCardDeck cardDeck = new PokerCardDeck();
         cardDeck.create();
         cardDeck.shuffle();
+        cardDeck.secureShuffle();
 
         EnumMap<PokerPatternType, Integer> patterns = new EnumMap<PokerPatternType, Integer>(PokerPatternType.class);
         EnumMap<PokerPatternType, Set<String>> uniques = new EnumMap<>(PokerPatternType.class);
 
-        int numTrials = 500000;
+        int numTrials = 5000000;
         int numDealt = 0;
 
         long startTime = nanoTime();
 
         while (numDealt < numTrials) {
             Hand hand = new Hand(cardDeck.getCards(5));
-            PokerPatternType pattern = PatternEvaluator.getPokerPattern(hand.sort());
+            PokerPatternType pattern = PokerPatternEvaluator.getPokerPattern(hand.sort(), true);
+            PokerPatternType pattern2 = PokerPatternEvaluator.getPokerPattern(hand.sort(), false);
+
+            if (pattern != pattern2) {
+                progressbar.set(false);
+                throw new IllegalArgumentException("Strict "  +
+                        pattern + " != non-strict " + pattern2 + ": " + hand);
+            }
 
             var pc = patterns.putIfAbsent(pattern, 1);
             if (pc != null) patterns.put(pattern, patterns.get(pattern) + 1);

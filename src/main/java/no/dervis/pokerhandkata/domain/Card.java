@@ -45,6 +45,10 @@ public class Card implements Comparable<Card>{
 		return type.getPrefix();
 	}
 
+	public String id() {
+		return "" + type + group;
+	}
+
 	/**
 	 * Prints the name and the group of the card.
 	 *

@@ -1,5 +1,6 @@
 package no.dervis.pokerhandkata.domain;
 
+import java.security.SecureRandom;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -84,6 +85,10 @@ public class CardDeck {
      */
     public void shuffle() {
         Collections.shuffle(list);
+    }
+
+    public void secureShuffle() {
+        Collections.shuffle(list, new SecureRandom());
     }
 
     /**

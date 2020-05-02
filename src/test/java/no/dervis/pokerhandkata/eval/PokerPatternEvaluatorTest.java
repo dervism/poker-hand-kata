@@ -1,8 +1,6 @@
 package no.dervis.pokerhandkata.eval;
 
 import no.dervis.pokerhandkata.domain.Card;
-import no.dervis.pokerhandkata.domain.CardGroup;
-import no.dervis.pokerhandkata.domain.CardType;
 import no.dervis.pokerhandkata.domain.Hand;
 import org.junit.jupiter.api.Test;
 
@@ -10,7 +8,7 @@ import static no.dervis.pokerhandkata.domain.CardType.*;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class PatternEvaluatorTest {
+class PokerPatternEvaluatorTest implements CardUtils {
 
     @Test
     void isStraight() {
@@ -21,7 +19,7 @@ class PatternEvaluatorTest {
                 hearts(FIVE),
                 spades(SIX)
         };
-        assertTrue(PatternEvaluator.isStraight(hand));
+        assertTrue(PokerPatternEvaluator.isStraight(hand));
     }
 
     @Test
@@ -33,7 +31,7 @@ class PatternEvaluatorTest {
                 hearts(FOUR),
                 spades(SIX)
         };
-        assertFalse(PatternEvaluator.isStraight(hand));
+        assertFalse(PokerPatternEvaluator.isStraight(hand));
     }
 
     @Test
@@ -45,7 +43,7 @@ class PatternEvaluatorTest {
                 hearts(FIVE),
                 spades(FIVE)
         };
-        assertTrue(PatternEvaluator.isHouse(hand));
+        assertTrue(PokerPatternEvaluator.isHouse(hand));
     }
 
     @Test
@@ -57,7 +55,7 @@ class PatternEvaluatorTest {
                 hearts(FIVE),
                 spades(FIVE)
         };
-        assertFalse(PatternEvaluator.isHouse(hand));
+        assertFalse(PokerPatternEvaluator.isHouse(hand));
     }
 
     @Test
@@ -69,7 +67,7 @@ class PatternEvaluatorTest {
                 spades(FIVE),
                 diamonds(NINE)
         };
-        assertTrue(PatternEvaluator.isTwoPairs(Hand.of(cards)));
+        assertTrue(PokerPatternEvaluator.isTwoPairs(Hand.of(cards)));
     }
 
     @Test
@@ -81,24 +79,26 @@ class PatternEvaluatorTest {
                 spades(SEVEN),
                 diamonds(NINE)
         };
-        assertFalse(PatternEvaluator.isTwoPairs(Hand.of(cards)));
+        assertFalse(PokerPatternEvaluator.isTwoPairs(Hand.of(cards)));
     }
 
+    @Test
+    void strictOnePair() {
+        Card[] cards = textToHand("[8♦][9♠][T♠][A♣][A♠]").getCards();
 
-
-    public Card hearts(CardType type) {
-        return new Card(type, CardGroup.HEARTS);
+        assertTrue(PokerPatternEvaluator.isOnePair(cards));
+        assertTrue(PokerPatternEvaluator.isOnePairStrict(cards));
+        assertFalse(PokerPatternEvaluator.isTwoPairs(Hand.of(cards)));
+        assertFalse(PokerPatternEvaluator.isTwoPairsStrict(cards));
     }
 
-    public Card clubs(CardType type) {
-        return new Card(type, CardGroup.CLUBS);
-    }
+    @Test
+    void strictTwoPairs() {
+        Hand hand = textToHand("[7♦][7♥][9♦][T♦][T♥]");
 
-    public Card diamonds(CardType type) {
-        return new Card(type, CardGroup.DIAMONDS);
-    }
-
-    public Card spades(CardType type) {
-        return new Card(type, CardGroup.SPADES);
+        assertTrue(PokerPatternEvaluator.isTwoPairs(hand));
+        assertTrue(PokerPatternEvaluator.isTwoPairsStrict(hand.getCards()));
+        assertTrue(PokerPatternEvaluator.isOnePair(hand.getCards()));
+        assertTrue(PokerPatternEvaluator.isOnePairStrict(hand.getCards()));
     }
 }

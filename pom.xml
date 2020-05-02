@@ -22,6 +22,11 @@
             <version>5.7.0-M1</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.diogonunes</groupId>
+            <artifactId>JCDP</artifactId>
+            <version>4.0.1</version>
+        </dependency>
     </dependencies>
 
     <build>

@@ -1,16 +1,9 @@
 package no.dervis.pokerhandkata.domain;
 
-/**
- * The PokerCardSet class represents a poker cardset that
- * can be used in any type of poker games.
- * 
- * @author Dervis Mansuroglu
- * @version 0.0.1
- */
 public class PokerCardDeck extends CardDeck {
 	
 	/**
-	 * Creates a new PokerCardSet
+	 * Creates a new PokerCardDeck
 	 */
 	public PokerCardDeck() {
 		super(IncludeJokerCard.JOKER_OFF);
