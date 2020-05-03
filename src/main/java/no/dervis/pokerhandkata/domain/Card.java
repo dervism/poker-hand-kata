@@ -19,12 +19,12 @@ public class Card implements Comparable<Card>{
 		return type;
 	}
 
-	public int ordinal() {
-		return type.ordinal();
-	}
-
 	public CardGroup getGroup() {
 		return group;
+	}
+
+	public int ordinal() {
+		return type.ordinal();
 	}
 
 	public final int compareTo(Card c) {
@@ -39,10 +39,6 @@ public class Card implements Comparable<Card>{
 			return type == card.getType() && group == card.getGroup();
 
 		return false;
-	}
-
-	public String shortString() {
-		return type.getShortName();
 	}
 
 	/**

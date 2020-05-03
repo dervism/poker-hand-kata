@@ -16,19 +16,19 @@ public enum CardType {
     ACE("Ace", "A"),
     JOKER("Joker", "R");
 
-    private final String fullName;
-    private final String shortName;
-    CardType(String fullName, String shortName) {
-        this.fullName = fullName;
-        this.shortName = shortName;
+    private final String name;
+    private final String label;
+    CardType(String name, String label) {
+        this.name = name;
+        this.label = label;
     }
 
-    public String getShortName() {
-        return shortName;
+    public String getLabel() {
+        return label;
     }
 
     @Override
     public String toString() {
-        return shortName;
+        return label;
     }
 }

@@ -39,29 +39,17 @@ import static java.lang.System.nanoTime;
  * @version 0.1
  */
 
-public class PokerHandSimulator {
+public class PokerHandSimulator implements Runnable {
+    private Thread worker;
+    private final AtomicBoolean running = new AtomicBoolean(false);
+    private final AtomicBoolean stopped = new AtomicBoolean(true);
 
-    public static void run() {
-        final AtomicBoolean progressbar = new AtomicBoolean(true);
+    @Override
+    public void run() {
+        Progressbar progressbar = new Progressbar();
 
-        Thread t = new Thread(() -> {
-            int tmp = 0;
-            while (progressbar.get()) {
-                try {
-                    Thread.sleep(300);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-                if (progressbar.get()) {
-                    if (++tmp % 40 == 0) {
-                        System.out.print(">\n");
-                    } else System.out.print(">");
-                }
-            }
-
-        });
-        t.start();
+        running.set(true);
+        stopped.set(false);
 
         PokerCardDeck cardDeck = new PokerCardDeck();
         cardDeck.create();
@@ -74,6 +62,7 @@ public class PokerHandSimulator {
         int numTrials = 500000;
         int numDealt = 0;
 
+        progressbar.start();
         long startTime = nanoTime();
 
         while (numDealt < numTrials) {
@@ -89,8 +78,8 @@ public class PokerHandSimulator {
             numDealt++;
         }
 
-        progressbar.set(false);
-        System.out.printf(" %.2f sec" + lineSeparator(), ((nanoTime() - startTime) / 1_000_000_000d));
+        progressbar.stop();
+        System.out.printf("> %.2f sec" + lineSeparator(), ((nanoTime() - startTime) / 1_000_000_000d));
 
         TreeSet<Map.Entry<PokerPatternType, Integer>> set = new TreeSet<>(Map.Entry.<PokerPatternType, Integer>comparingByValue().reversed());
         set.addAll(patterns.entrySet());
@@ -101,6 +90,31 @@ public class PokerHandSimulator {
                     "(" + uniques.get(entry.getKey()).size() + ")" +
                     " (" + (des.format(((entry.getValue() / (float) numTrials)) * 100)) + "%) ");
         }
+
+        running.set(false);
+        stopped.set(true);
+    }
+
+    public void start() {
+        worker = new Thread(this);
+        worker.start();
+    }
+
+    public void stop() {
+        running.set(false);
+    }
+
+    public void interrupt() {
+        running.set(false);
+        worker.interrupt();
+    }
+
+    boolean isRunning() {
+        return running.get();
+    }
+
+    boolean isStopped() {
+        return stopped.get();
     }
 
 }

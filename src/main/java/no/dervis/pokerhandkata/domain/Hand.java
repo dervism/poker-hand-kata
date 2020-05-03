@@ -42,10 +42,23 @@ public class Hand {
 	public String toShortString() {
 		StringBuilder b = new StringBuilder(cards.length);
 		for (Card card : cards) {
-			b.append(card.shortString());
+			b.append(card.getType().getLabel());
 		}
 
 		return b.toString();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		Hand hand = (Hand) o;
+		return Arrays.equals(cards, hand.cards);
+	}
+
+	@Override
+	public int hashCode() {
+		return Arrays.hashCode(cards);
 	}
 
 	/**

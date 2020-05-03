@@ -34,7 +34,7 @@ public interface CardUtils {
             final String ik = Character.toString(hand.charAt(i));
             final String ij = Character.toString(hand.charAt(i+1));
             CardType type = Arrays
-                    .stream(CardType.values()).filter(c -> c.getShortName().equals(ik)).findAny().orElseThrow();
+                    .stream(CardType.values()).filter(c -> c.getLabel().equals(ik)).findAny().orElseThrow();
             CardGroup group = Arrays
                     .stream(CardGroup.values()).filter(g -> g.getSymbol().equals(ij)).findAny().orElseThrow();
             list.add(new Card(type, group));
